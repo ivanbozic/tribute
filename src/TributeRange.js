@@ -21,8 +21,11 @@ class TributeRange {
     }
 
     positionMenuAtCaret(scrollTo) {
+        console.log("positionMenuAtCaret");
         let context = this.tribute.current,
             coordinates
+
+        console.log(context);
 
         let info = this.getTriggerInfo(false, this.tribute.hasTrailingSpace, true, this.tribute.allowSpaces, this.tribute.autocompleteMode)
 

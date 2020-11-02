@@ -1,3 +1,5 @@
+
+(function(l, r) { if (l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (window.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.head.appendChild(r) })(window.document);
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -142,16 +144,16 @@
         element.boundKeydown = this.keydown.bind(element, this);
         element.boundKeyup = this.keyup.bind(element, this);
         element.boundInput = this.input.bind(element, this);
-        element.addEventListener("keydown", element.boundKeydown, false);
-        element.addEventListener("keyup", element.boundKeyup, false);
-        element.addEventListener("input", element.boundInput, false);
+        element.addEventListener("keydown", element.boundKeydown, true);
+        element.addEventListener("keyup", element.boundKeyup, true);
+        element.addEventListener("input", element.boundInput, true);
       }
     }, {
       key: "unbind",
       value: function unbind(element) {
-        element.removeEventListener("keydown", element.boundKeydown, false);
-        element.removeEventListener("keyup", element.boundKeyup, false);
-        element.removeEventListener("input", element.boundInput, false);
+        element.removeEventListener("keydown", element.boundKeydown, true);
+        element.removeEventListener("keyup", element.boundKeyup, true);
+        element.removeEventListener("input", element.boundInput, true);
         delete element.boundKeydown;
         delete element.boundKeyup;
         delete element.boundInput;
@@ -597,23 +599,26 @@
           }
 
           if (scrollTo) this.scrollIntoView();
-          window.setTimeout(function () {
-            var menuDimensions = {
-              width: _this.tribute.menu.offsetWidth,
-              height: _this.tribute.menu.offsetHeight
-            };
 
-            var menuIsOffScreen = _this.isMenuOffScreen(coordinates, menuDimensions);
+          if (this.menuContainerIsBody) {
+            window.setTimeout(function () {
+              var menuDimensions = {
+                width: _this.tribute.menu.offsetWidth,
+                height: _this.tribute.menu.offsetHeight
+              };
 
-            var menuIsOffScreenHorizontally = window.innerWidth > menuDimensions.width && (menuIsOffScreen.left || menuIsOffScreen.right);
-            var menuIsOffScreenVertically = window.innerHeight > menuDimensions.height && (menuIsOffScreen.top || menuIsOffScreen.bottom);
+              var menuIsOffScreen = _this.isMenuOffScreen(coordinates, menuDimensions);
 
-            if (menuIsOffScreenHorizontally || menuIsOffScreenVertically) {
-              _this.tribute.menu.style.cssText = 'display: none';
+              var menuIsOffScreenHorizontally = window.innerWidth > menuDimensions.width && (menuIsOffScreen.left || menuIsOffScreen.right);
+              var menuIsOffScreenVertically = window.innerHeight > menuDimensions.height && (menuIsOffScreen.top || menuIsOffScreen.bottom);
 
-              _this.positionMenuAtCaret(scrollTo);
-            }
-          }, 0);
+              if (menuIsOffScreenHorizontally || menuIsOffScreenVertically) {
+                _this.tribute.menu.style.cssText = 'display: none';
+
+                _this.positionMenuAtCaret(scrollTo);
+              }
+            }, 0);
+          }
         } else {
           this.tribute.menu.style.cssText = 'display: none';
         }
@@ -1092,6 +1097,13 @@
         var menuDimensions = this.getMenuDimensions();
         var menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions);
 
+        if (!this.menuContainerIsBody) {
+          var menuContainerRect = this.tribute.menuContainer.getBoundingClientRect();
+          coordinates.left = rect.left - menuContainerRect.left;
+          coordinates.top = this.tribute.menuContainer.scrollTop + rect.top + rect.height;
+          return coordinates;
+        }
+
         if (menuIsOffScreen.right) {
           coordinates.left = 'auto';
           coordinates.right = windowWidth - rect.left - windowLeft;
@@ -1116,11 +1128,6 @@
         if (menuIsOffScreen.top) {
           coordinates.top = windowHeight > menuDimensions.height ? windowTop + windowHeight - menuDimensions.height : windowTop;
           delete coordinates.bottom;
-        }
-
-        if (!this.menuContainerIsBody) {
-          coordinates.left = coordinates.left ? coordinates.left - this.tribute.menuContainer.offsetLeft : coordinates.left;
-          coordinates.top = coordinates.top ? coordinates.top - this.tribute.menuContainer.offsetTop : coordinates.top;
         }
 
         return coordinates;
@@ -1547,10 +1554,8 @@
       key: "ensureEditable",
       value: function ensureEditable(element) {
         if (Tribute.inputTypes().indexOf(element.nodeName) === -1) {
-          if (element.contentEditable) {
-            element.contentEditable = true;
-          } else {
-            throw new Error("[Tribute] Cannot bind to " + element.nodeName);
+          if (!element.contentEditable) {
+            throw new Error("[Tribute] Cannot bind to " + element.nodeName + ", not contentEditable");
           }
         }
       }

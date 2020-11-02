@@ -84,15 +84,15 @@ class TributeEvents {
     element.boundKeyup = this.keyup.bind(element, this);
     element.boundInput = this.input.bind(element, this);
 
-    element.addEventListener("keydown", element.boundKeydown, false);
-    element.addEventListener("keyup", element.boundKeyup, false);
-    element.addEventListener("input", element.boundInput, false);
+    element.addEventListener("keydown", element.boundKeydown, true);
+    element.addEventListener("keyup", element.boundKeyup, true);
+    element.addEventListener("input", element.boundInput, true);
   }
 
   unbind(element) {
-    element.removeEventListener("keydown", element.boundKeydown, false);
-    element.removeEventListener("keyup", element.boundKeyup, false);
-    element.removeEventListener("input", element.boundInput, false);
+    element.removeEventListener("keydown", element.boundKeydown, true);
+    element.removeEventListener("keyup", element.boundKeyup, true);
+    element.removeEventListener("input", element.boundInput, true);
 
     delete element.boundKeydown;
     delete element.boundKeyup;
@@ -532,21 +532,22 @@ class TributeRange {
 
             if (scrollTo) this.scrollIntoView();
 
-            window.setTimeout(() => {
-                let menuDimensions = {
-                   width: this.tribute.menu.offsetWidth,
-                   height: this.tribute.menu.offsetHeight
-                };
-                let menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions);
-
-                let menuIsOffScreenHorizontally = window.innerWidth > menuDimensions.width && (menuIsOffScreen.left || menuIsOffScreen.right);
-                let menuIsOffScreenVertically = window.innerHeight > menuDimensions.height && (menuIsOffScreen.top || menuIsOffScreen.bottom);
-                if (menuIsOffScreenHorizontally || menuIsOffScreenVertically) {
-                    this.tribute.menu.style.cssText = 'display: none';
-                    this.positionMenuAtCaret(scrollTo);
-                }
-            }, 0);
-
+            if (this.menuContainerIsBody) {
+                window.setTimeout(() => {
+                    let menuDimensions = {
+                       width: this.tribute.menu.offsetWidth,
+                       height: this.tribute.menu.offsetHeight
+                    };
+                    let menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions);
+    
+                    let menuIsOffScreenHorizontally = window.innerWidth > menuDimensions.width && (menuIsOffScreen.left || menuIsOffScreen.right);
+                    let menuIsOffScreenVertically = window.innerHeight > menuDimensions.height && (menuIsOffScreen.top || menuIsOffScreen.bottom);
+                    if (menuIsOffScreenHorizontally || menuIsOffScreenVertically) {
+                        this.tribute.menu.style.cssText = 'display: none';
+                        this.positionMenuAtCaret(scrollTo);
+                    }
+                }, 0);
+            }
         } else {
             this.tribute.menu.style.cssText = 'display: none';
         }
@@ -1052,11 +1053,21 @@ class TributeRange {
             left: left + windowLeft,
             top: top + rect.height + windowTop
         };
+
         let windowWidth = window.innerWidth;
         let windowHeight = window.innerHeight;
 
         let menuDimensions = this.getMenuDimensions();
         let menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions);
+
+        if (!this.menuContainerIsBody) {
+            let menuContainerRect = this.tribute.menuContainer.getBoundingClientRect();
+
+            coordinates.left = rect.left - menuContainerRect.left;
+            coordinates.top = this.tribute.menuContainer.scrollTop + rect.top + rect.height;
+
+            return coordinates
+        }
 
         if (menuIsOffScreen.right) {
             coordinates.left = 'auto';
@@ -1089,11 +1100,6 @@ class TributeRange {
                 ? windowTop + windowHeight - menuDimensions.height
                 : windowTop;
             delete coordinates.bottom;
-        }
-
-        if (!this.menuContainerIsBody) {
-            coordinates.left = coordinates.left ? coordinates.left - this.tribute.menuContainer.offsetLeft : coordinates.left;
-            coordinates.top = coordinates.top ? coordinates.top - this.tribute.menuContainer.offsetTop : coordinates.top;
         }
 
         return coordinates
@@ -1542,10 +1548,8 @@ class Tribute {
 
   ensureEditable(element) {
     if (Tribute.inputTypes().indexOf(element.nodeName) === -1) {
-      if (element.contentEditable) {
-        element.contentEditable = true;
-      } else {
-        throw new Error("[Tribute] Cannot bind to " + element.nodeName);
+      if (!element.contentEditable) {
+        throw new Error("[Tribute] Cannot bind to " + element.nodeName + ", not contentEditable");
       }
     }
   }

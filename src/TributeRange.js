@@ -58,21 +58,22 @@ class TributeRange {
 
             if (scrollTo) this.scrollIntoView()
 
-            window.setTimeout(() => {
-                let menuDimensions = {
-                   width: this.tribute.menu.offsetWidth,
-                   height: this.tribute.menu.offsetHeight
-                }
-                let menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions)
-
-                let menuIsOffScreenHorizontally = window.innerWidth > menuDimensions.width && (menuIsOffScreen.left || menuIsOffScreen.right)
-                let menuIsOffScreenVertically = window.innerHeight > menuDimensions.height && (menuIsOffScreen.top || menuIsOffScreen.bottom)
-                if (menuIsOffScreenHorizontally || menuIsOffScreenVertically) {
-                    this.tribute.menu.style.cssText = 'display: none'
-                    this.positionMenuAtCaret(scrollTo)
-                }
-            }, 0)
-
+            if (this.menuContainerIsBody) {
+                window.setTimeout(() => {
+                    let menuDimensions = {
+                       width: this.tribute.menu.offsetWidth,
+                       height: this.tribute.menu.offsetHeight
+                    }
+                    let menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions)
+    
+                    let menuIsOffScreenHorizontally = window.innerWidth > menuDimensions.width && (menuIsOffScreen.left || menuIsOffScreen.right)
+                    let menuIsOffScreenVertically = window.innerHeight > menuDimensions.height && (menuIsOffScreen.top || menuIsOffScreen.bottom)
+                    if (menuIsOffScreenHorizontally || menuIsOffScreenVertically) {
+                        this.tribute.menu.style.cssText = 'display: none'
+                        this.positionMenuAtCaret(scrollTo)
+                    }
+                }, 0)
+            }
         } else {
             this.tribute.menu.style.cssText = 'display: none'
         }
@@ -578,11 +579,21 @@ class TributeRange {
             left: left + windowLeft,
             top: top + rect.height + windowTop
         }
+
         let windowWidth = window.innerWidth
         let windowHeight = window.innerHeight
 
         let menuDimensions = this.getMenuDimensions()
         let menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions)
+
+        if (!this.menuContainerIsBody) {
+            let menuContainerRect = this.tribute.menuContainer.getBoundingClientRect()
+
+            coordinates.left = rect.left - menuContainerRect.left
+            coordinates.top = this.tribute.menuContainer.scrollTop + rect.top + rect.height
+
+            return coordinates
+        }
 
         if (menuIsOffScreen.right) {
             coordinates.left = 'auto'
@@ -615,11 +626,6 @@ class TributeRange {
                 ? windowTop + windowHeight - menuDimensions.height
                 : windowTop
             delete coordinates.bottom
-        }
-
-        if (!this.menuContainerIsBody) {
-            coordinates.left = coordinates.left ? coordinates.left - this.tribute.menuContainer.offsetLeft : coordinates.left
-            coordinates.top = coordinates.top ? coordinates.top - this.tribute.menuContainer.offsetTop : coordinates.top
         }
 
         return coordinates

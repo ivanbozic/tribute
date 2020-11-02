@@ -587,6 +587,7 @@ class TributeRange {
         let menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions)
 
         if (!this.menuContainerIsBody) {
+            console.warn("Using custom Tribute");
             let menuContainerRect = this.tribute.menuContainer.getBoundingClientRect()
 
             coordinates.left = rect.left - menuContainerRect.left

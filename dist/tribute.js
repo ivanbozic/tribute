@@ -1098,6 +1098,7 @@
         var menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions);
 
         if (!this.menuContainerIsBody) {
+          console.warn("Using custom Tribute");
           var menuContainerRect = this.tribute.menuContainer.getBoundingClientRect();
           coordinates.left = rect.left - menuContainerRect.left;
           coordinates.top = this.tribute.menuContainer.scrollTop + rect.top + rect.height;

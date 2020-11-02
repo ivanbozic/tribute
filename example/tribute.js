@@ -572,10 +572,8 @@
       value: function positionMenuAtCaret(scrollTo) {
         var _this = this;
 
-        console.log("positionMenuAtCaret");
         var context = this.tribute.current,
             coordinates;
-        console.log(context);
         var info = this.getTriggerInfo(false, this.tribute.hasTrailingSpace, true, this.tribute.allowSpaces, this.tribute.autocompleteMode);
 
         if (typeof info !== 'undefined') {
@@ -590,6 +588,7 @@
             coordinates = this.getContentEditableCaretPosition(info.mentionPosition);
           }
 
+          console.warn(coordinates);
           this.tribute.menu.style.cssText = "top: ".concat(coordinates.top, "px;\n                                     left: ").concat(coordinates.left, "px;\n                                     right: ").concat(coordinates.right, "px;\n                                     bottom: ").concat(coordinates.bottom, "px;\n                                     position: absolute;\n                                     display: block;");
 
           if (coordinates.left === 'auto') {
@@ -601,23 +600,26 @@
           }
 
           if (scrollTo) this.scrollIntoView();
-          window.setTimeout(function () {
-            var menuDimensions = {
-              width: _this.tribute.menu.offsetWidth,
-              height: _this.tribute.menu.offsetHeight
-            };
 
-            var menuIsOffScreen = _this.isMenuOffScreen(coordinates, menuDimensions);
+          if (this.menuContainerIsBody) {
+            window.setTimeout(function () {
+              var menuDimensions = {
+                width: _this.tribute.menu.offsetWidth,
+                height: _this.tribute.menu.offsetHeight
+              };
 
-            var menuIsOffScreenHorizontally = window.innerWidth > menuDimensions.width && (menuIsOffScreen.left || menuIsOffScreen.right);
-            var menuIsOffScreenVertically = window.innerHeight > menuDimensions.height && (menuIsOffScreen.top || menuIsOffScreen.bottom);
+              var menuIsOffScreen = _this.isMenuOffScreen(coordinates, menuDimensions);
 
-            if (menuIsOffScreenHorizontally || menuIsOffScreenVertically) {
-              _this.tribute.menu.style.cssText = 'display: none';
+              var menuIsOffScreenHorizontally = window.innerWidth > menuDimensions.width && (menuIsOffScreen.left || menuIsOffScreen.right);
+              var menuIsOffScreenVertically = window.innerHeight > menuDimensions.height && (menuIsOffScreen.top || menuIsOffScreen.bottom);
 
-              _this.positionMenuAtCaret(scrollTo);
-            }
-          }, 0);
+              if (menuIsOffScreenHorizontally || menuIsOffScreenVertically) {
+                _this.tribute.menu.style.cssText = 'display: none';
+
+                _this.positionMenuAtCaret(scrollTo);
+              }
+            }, 0);
+          }
         } else {
           this.tribute.menu.style.cssText = 'display: none';
         }
@@ -1096,6 +1098,21 @@
         var menuDimensions = this.getMenuDimensions();
         var menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions);
 
+        if (!this.menuContainerIsBody) {
+          var menuContainerRect = this.tribute.menuContainer.getBoundingClientRect();
+          console.log("rect", rect);
+          console.log("menuContainerRect", menuContainerRect);
+          console.log("scrollTop", this.tribute.menuContainer.scrollTop);
+          coordinates.left = rect.left - menuContainerRect.left;
+          coordinates.top = this.tribute.menuContainer.scrollTop + rect.top + rect.height; // coordinates.left = coordinates.left ? coordinates.left - this.tribute.menuContainer.offsetLeft : coordinates.left
+          // coordinates.top = coordinates.top ? coordinates.top - this.tribute.menuContainer.offsetTop : coordinates.top
+          // console.log("coordinates.top", coordinates.top);
+          // coordinates.left = 0;
+          // coordinates.top = this.tribute.menuContainer.offsetTop
+
+          return coordinates;
+        }
+
         if (menuIsOffScreen.right) {
           coordinates.left = 'auto';
           coordinates.right = windowWidth - rect.left - windowLeft;
@@ -1120,11 +1137,6 @@
         if (menuIsOffScreen.top) {
           coordinates.top = windowHeight > menuDimensions.height ? windowTop + windowHeight - menuDimensions.height : windowTop;
           delete coordinates.bottom;
-        }
-
-        if (!this.menuContainerIsBody) {
-          coordinates.left = coordinates.left ? coordinates.left - this.tribute.menuContainer.offsetLeft : coordinates.left;
-          coordinates.top = coordinates.top ? coordinates.top - this.tribute.menuContainer.offsetTop : coordinates.top;
         }
 
         return coordinates;

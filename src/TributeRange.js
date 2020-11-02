@@ -21,11 +21,8 @@ class TributeRange {
     }
 
     positionMenuAtCaret(scrollTo) {
-        console.log("positionMenuAtCaret");
         let context = this.tribute.current,
             coordinates
-
-        console.log(context);
 
         let info = this.getTriggerInfo(false, this.tribute.hasTrailingSpace, true, this.tribute.allowSpaces, this.tribute.autocompleteMode)
 
@@ -44,6 +41,8 @@ class TributeRange {
                 coordinates = this.getContentEditableCaretPosition(info.mentionPosition)
             }
 
+            console.warn(coordinates);
+
             this.tribute.menu.style.cssText = `top: ${coordinates.top}px;
                                      left: ${coordinates.left}px;
                                      right: ${coordinates.right}px;
@@ -61,21 +60,22 @@ class TributeRange {
 
             if (scrollTo) this.scrollIntoView()
 
-            window.setTimeout(() => {
-                let menuDimensions = {
-                   width: this.tribute.menu.offsetWidth,
-                   height: this.tribute.menu.offsetHeight
-                }
-                let menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions)
-
-                let menuIsOffScreenHorizontally = window.innerWidth > menuDimensions.width && (menuIsOffScreen.left || menuIsOffScreen.right)
-                let menuIsOffScreenVertically = window.innerHeight > menuDimensions.height && (menuIsOffScreen.top || menuIsOffScreen.bottom)
-                if (menuIsOffScreenHorizontally || menuIsOffScreenVertically) {
-                    this.tribute.menu.style.cssText = 'display: none'
-                    this.positionMenuAtCaret(scrollTo)
-                }
-            }, 0)
-
+            if (this.menuContainerIsBody) {
+                window.setTimeout(() => {
+                    let menuDimensions = {
+                       width: this.tribute.menu.offsetWidth,
+                       height: this.tribute.menu.offsetHeight
+                    }
+                    let menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions)
+    
+                    let menuIsOffScreenHorizontally = window.innerWidth > menuDimensions.width && (menuIsOffScreen.left || menuIsOffScreen.right)
+                    let menuIsOffScreenVertically = window.innerHeight > menuDimensions.height && (menuIsOffScreen.top || menuIsOffScreen.bottom)
+                    if (menuIsOffScreenHorizontally || menuIsOffScreenVertically) {
+                        this.tribute.menu.style.cssText = 'display: none'
+                        this.positionMenuAtCaret(scrollTo)
+                    }
+                }, 0)
+            }
         } else {
             this.tribute.menu.style.cssText = 'display: none'
         }
@@ -581,11 +581,32 @@ class TributeRange {
             left: left + windowLeft,
             top: top + rect.height + windowTop
         }
+
         let windowWidth = window.innerWidth
         let windowHeight = window.innerHeight
 
         let menuDimensions = this.getMenuDimensions()
         let menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions)
+
+        if (!this.menuContainerIsBody) {
+            let menuContainerRect = this.tribute.menuContainer.getBoundingClientRect()
+
+            console.log("rect", rect);
+            console.log("menuContainerRect", menuContainerRect);
+
+            console.log("scrollTop", this.tribute.menuContainer.scrollTop);
+
+            coordinates.left = rect.left - menuContainerRect.left
+            coordinates.top = this.tribute.menuContainer.scrollTop + rect.top + rect.height
+
+            // coordinates.left = coordinates.left ? coordinates.left - this.tribute.menuContainer.offsetLeft : coordinates.left
+            // coordinates.top = coordinates.top ? coordinates.top - this.tribute.menuContainer.offsetTop : coordinates.top
+            // console.log("coordinates.top", coordinates.top);
+            // coordinates.left = 0;
+            // coordinates.top = this.tribute.menuContainer.offsetTop
+
+            return coordinates
+        }
 
         if (menuIsOffScreen.right) {
             coordinates.left = 'auto'
@@ -618,11 +639,6 @@ class TributeRange {
                 ? windowTop + windowHeight - menuDimensions.height
                 : windowTop
             delete coordinates.bottom
-        }
-
-        if (!this.menuContainerIsBody) {
-            coordinates.left = coordinates.left ? coordinates.left - this.tribute.menuContainer.offsetLeft : coordinates.left
-            coordinates.top = coordinates.top ? coordinates.top - this.tribute.menuContainer.offsetTop : coordinates.top
         }
 
         return coordinates

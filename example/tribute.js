@@ -588,7 +588,6 @@
             coordinates = this.getContentEditableCaretPosition(info.mentionPosition);
           }
 
-          console.warn(coordinates);
           this.tribute.menu.style.cssText = "top: ".concat(coordinates.top, "px;\n                                     left: ").concat(coordinates.left, "px;\n                                     right: ").concat(coordinates.right, "px;\n                                     bottom: ").concat(coordinates.bottom, "px;\n                                     position: absolute;\n                                     display: block;");
 
           if (coordinates.left === 'auto') {
@@ -1100,16 +1099,8 @@
 
         if (!this.menuContainerIsBody) {
           var menuContainerRect = this.tribute.menuContainer.getBoundingClientRect();
-          console.log("rect", rect);
-          console.log("menuContainerRect", menuContainerRect);
-          console.log("scrollTop", this.tribute.menuContainer.scrollTop);
           coordinates.left = rect.left - menuContainerRect.left;
-          coordinates.top = this.tribute.menuContainer.scrollTop + rect.top + rect.height; // coordinates.left = coordinates.left ? coordinates.left - this.tribute.menuContainer.offsetLeft : coordinates.left
-          // coordinates.top = coordinates.top ? coordinates.top - this.tribute.menuContainer.offsetTop : coordinates.top
-          // console.log("coordinates.top", coordinates.top);
-          // coordinates.left = 0;
-          // coordinates.top = this.tribute.menuContainer.offsetTop
-
+          coordinates.top = this.tribute.menuContainer.scrollTop + rect.top + rect.height;
           return coordinates;
         }
 

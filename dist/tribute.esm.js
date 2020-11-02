@@ -515,8 +515,6 @@ class TributeRange {
                 coordinates = this.getContentEditableCaretPosition(info.mentionPosition);
             }
 
-            console.warn(coordinates);
-
             this.tribute.menu.style.cssText = `top: ${coordinates.top}px;
                                      left: ${coordinates.left}px;
                                      right: ${coordinates.right}px;
@@ -1065,19 +1063,8 @@ class TributeRange {
         if (!this.menuContainerIsBody) {
             let menuContainerRect = this.tribute.menuContainer.getBoundingClientRect();
 
-            console.log("rect", rect);
-            console.log("menuContainerRect", menuContainerRect);
-
-            console.log("scrollTop", this.tribute.menuContainer.scrollTop);
-
             coordinates.left = rect.left - menuContainerRect.left;
             coordinates.top = this.tribute.menuContainer.scrollTop + rect.top + rect.height;
-
-            // coordinates.left = coordinates.left ? coordinates.left - this.tribute.menuContainer.offsetLeft : coordinates.left
-            // coordinates.top = coordinates.top ? coordinates.top - this.tribute.menuContainer.offsetTop : coordinates.top
-            // console.log("coordinates.top", coordinates.top);
-            // coordinates.left = 0;
-            // coordinates.top = this.tribute.menuContainer.offsetTop
 
             return coordinates
         }
